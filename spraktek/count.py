@@ -52,7 +52,7 @@ wi  C(wi)   #words  P(wi)
         sentenceFrequency = sentenceFrequency * word[1]
         print(word[0], frequency[word[0]], totalWords, word[1])
         geometricMean *= word[1]
-    geometricMean = (geometricMean / len(wordFreqMap)) ** (1 / len(sentence_list))
+    geometricMean = geometricMean ** (1 / len(sentence_list))
     print('==========================================')
     print('Prob. unigrams: ', sentenceFrequency)
     print("Geometric mean prob: " + str(geometricMean))
@@ -77,40 +77,46 @@ def bigram_model(sentence):
         else:
             wordFreqMap[key] = (frequency_uni[key[1]]/totalWords)
 
+
+
     #Print
     print("""Bigram model
 ==========================================
-wi  wi+1    C(wi)   #words  P(wi)
+wi  wi+1    Ci,i+1   C(i)  P(wi+1|wi)
 ==========================================""")
 
-    print(wordFreqMap)
     for word in wordFreqMap:
         if word in frequency_bi:
-            sentenceFrequency = sentenceFrequency * wordFreqMap[word]
-            print(word, frequency_bi[word], frequency_uni[word[0]], frequency_bi[word] / (totalWords -1))
+            sentenceFrequency *= frequency_bi[word] / frequency_uni[word[0]]
+            geometricMean *= frequency_bi[word] / frequency_uni[word[0]]
+            print(word[0],word[1], frequency_bi[word], frequency_uni[word[0]], frequency_bi[word] / frequency_uni[word[0]])
         else:
-            sentenceFrequency = sentenceFrequency * frequency_uni[word[1]]
-            print(word, 0, frequency_uni[word[0]], '*backoff: ', sentenceFrequency)
-        #sentenceFrequency = sentenceFrequency * word[1]
-        #print(word[0][0],word[0][1], frequency_bi[word[0]], totalWords, word[1])
-        #geometricMean *= word[1]
-    geometricMean = (geometricMean / len(wordFreqMap)) ** (1 / len(sentence))
+            sentenceFrequency *= frequency_uni[word[1]] / frequency_uni[word[0]]
+            geometricMean *= frequency_uni[word[1]] / (totalWords - 1)
+            print(word[0],word[1], 0, frequency_uni[word[0]], '*backoff: ', frequency_uni[word[1]] / (totalWords -1))
+
+    geometricMean = (geometricMean) ** (1 / len(wordFreqMap))
     print('==========================================')
     print('Prob. bigrams: ', sentenceFrequency)
     print("Geometric mean prob: " + str(geometricMean))
-    print('Entropy rate: ', calc_entropy(sentenceFrequency, len(sentence)))
+    print('Entropy rate: ', calc_entropy(sentenceFrequency, len(sentence_list)))
     print("Perplexity: " + str(1 / (geometricMean)))
 
+
+
+
 def calc_entropy(sentence_prob, length):
-    return -1/length*math.log(sentence_prob)
+    return -1/length*math.log2(sentence_prob)
+
+
+
 
 if __name__ == '__main__':
     text = sys.stdin.read().lower()
     words = tokenize(text)
     totalWords = len(words)
     sentence = "det var en gång en katt som hette Nils".lower()
-    #unigram_model(sentence)
+    unigram_model(sentence)
+    print("""
+    """)
     bigram_model(sentence)
-
-    #for word in sorted(frequency.keys(), key=frequency.get, reverse=False):
-        #print(word, '\t', frequency[word])
