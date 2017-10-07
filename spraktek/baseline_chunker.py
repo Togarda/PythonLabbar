@@ -98,7 +98,8 @@ def eval(predicted):
             word_cnt += 1
             if row['chunk'] == row['pchunk']:
                 correct += 1
-    return correct / word_cnt
+
+    return correct / float(word_cnt)
 
 
 if __name__ == '__main__':
@@ -115,7 +116,7 @@ if __name__ == '__main__':
 
     predicted = predict(model, test_corpus)
     accuracy = eval(predicted)
-    print("Accuracy", accuracy)
+    print("Accuracy: ", accuracy)
     f_out = open('out', 'w')
     # We write the word (form), part of speech (pos),
     # gold-standard chunk (chunk), and predicted chunk (pchunk)

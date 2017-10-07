@@ -72,10 +72,9 @@ def extract_features_sent(sentence, w_size, feature_names):
         for j in range(2 * w_size + 1):
             x.append(padded_sentence[i + j][1])
         # The chunks (Up to the word)
-        """
         for j in range(w_size):
-            feature_line.append(padded_sentence[i + j][2])
-        """
+            x.append(padded_sentence[i + j][2])
+
         # We represent the feature vector as a dictionary
         X.append(dict(zip(feature_names, x)))
         # The classes are stored in a list
@@ -124,21 +123,52 @@ def encode_classes(y_symbols):
 
 
 def predict(test_sentences, feature_names, f_out):
+    y_test_predicted_symbols = []
+    predictedWords = 0
     for test_sentence in test_sentences:
+        c1 = "BOS"
+        c2 = "BOS"
         X_test_dict, y_test_symbols = extract_features_sent(test_sentence, w_size, feature_names)
         # Vectorize the test sentence and one hot encoding
-        X_test = vec.transform(X_test_dict)
+        for word in X_test_dict:
+            word['chu_2'] = c2
+            word['chu_1'] = c1
+            X_test = vec.transform(X_test_dict)
         # Predicts the chunks and returns numbers
-        y_test_predicted = classifier.predict(X_test)
+            y_test_predicted = classifier.predict(X_test)
+            y_test_predicted_symbol = dict_classes[y_test_predicted[0]]
+            y_test_predicted_symbols.append(y_test_predicted_symbol)
+            c2 = c1
+            c1 = y_test_predicted_symbol
+
+
         # Converts to chunk names
-        y_test_predicted_symbols = list(dict_classes[i] for i in y_test_predicted)
         # Appends the predicted chunks as a last column and saves the rows
+
         rows = test_sentence.splitlines()
-        rows = [rows[i] + ' ' + y_test_predicted_symbols[i] for i in range(len(rows))]
+        rows = [rows[i] + ' ' + y_test_predicted_symbols[i+predictedWords] for i in range(len(rows))]
         for row in rows:
             f_out.write(row + '\n')
         f_out.write('\n')
+        predictedWords+=len(rows)
     f_out.close()
+
+def eval(predicted):
+    """
+    Evaluates the predicted chunk accuracy
+    :param predicted:
+    :return:
+    """
+    word_cnt = 0
+    correct = 0
+    for sentence in predicted:
+        print(sentence)
+        words = sentence.split(' ')
+        print(words)
+        word_cnt += 1
+        if words[2] == words[3]:
+            correct += 1
+    return correct / float(word_cnt)
 
 
 if __name__ == '__main__':
@@ -147,7 +177,7 @@ if __name__ == '__main__':
     test_corpus = 'test.txt'
     w_size = 2  # The size of the context window to the left and right of the word
     feature_names = ['word_n2', 'word_n1', 'word', 'word_p1', 'word_p2',
-                     'pos_n2', 'pos_n1', 'pos', 'pos_p1', 'pos_p2']
+                     'pos_n2', 'pos_n1', 'pos', 'pos_p1', 'pos_p2', 'chu_2', 'chu_1']
 
     train_sentences = conll_reader.read_sentences(train_corpus)
 
@@ -166,8 +196,11 @@ if __name__ == '__main__':
 
     training_start_time = time.clock()
     print("Training the model...")
-    classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear')
+    #classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear')
+    classifier = linear_model.Perceptron()
+    #classifier = svm.SVC()
     model = classifier.fit(X, y)
+    #model = classifier.fit(X, y)
     print(model)
 
     test_start_time = time.clock()
@@ -195,4 +228,5 @@ if __name__ == '__main__':
 
     end_time = time.clock()
     print("Training time:", (test_start_time - training_start_time) / 60)
-print("Test time:", (end_time - test_start_time) / 60)
+    print("Test time:", (end_time - test_start_time) / 60)
+    #eval(open('out'))

@@ -11,6 +11,7 @@ import regex as re
 
 def tokenize(text):
     words = re.findall('[\S]+', text)
+    print
     return words
 
 
@@ -41,6 +42,7 @@ def unigram_model(sentence):
     wordFreqMap = []
     frequency = count_unigrams(words)
     sentence_list = sentence.split(' ')
+    print(frequency)
     for word in sentence_list:
         wordFreqMap.append((word, frequency[word] / totalWords))
     # print(wordFreqMap)
@@ -106,7 +108,8 @@ wi  wi+1    Ci,i+1   C(i)  P(wi+1|wi)
 
 
 def calc_entropy(sentence_prob, length):
-    return -1/length*math.log2(sentence_prob)
+    print(sentence_prob)
+    return -1/length*math.log(sentence_prob, 2)
 
 
 
@@ -115,7 +118,7 @@ if __name__ == '__main__':
     text = sys.stdin.read().lower()
     words = tokenize(text)
     totalWords = len(words)
-    sentence = "det var en gång en katt som hette Nils".lower()
+    sentence = "det var en man en katt som hette Nils".lower()
     unigram_model(sentence)
     print("""
     """)
