@@ -131,27 +131,42 @@ def predict(test_sentences, feature_names, f_out):
         X_test_dict, y_test_symbols = extract_features_sent(test_sentence, w_size, feature_names)
         # Vectorize the test sentence and one hot encoding
         for word in X_test_dict:
-            word['chu_2'] = c2
-            word['chu_1'] = c1
-            X_test = vec.transform(X_test_dict)
-        # Predicts the chunks and returns numbers
-            y_test_predicted = classifier.predict(X_test)
-            y_test_predicted_symbol = dict_classes[y_test_predicted[0]]
-            y_test_predicted_symbols.append(y_test_predicted_symbol)
-            c2 = c1
-            c1 = y_test_predicted_symbol
-
-
+                word['chu_2'] = c2
+                word['chu_1'] = c1
+                X_test = vec.transform(word)
+            # Predicts the chunks and returns numbers
+                y_test_predicted = classifier.predict(X_test)
+                y_test_predicted_symbol = dict_classes[y_test_predicted[0]]
+                y_test_predicted_symbols.append(y_test_predicted_symbol)
+                c1 = y_test_predicted_symbol
+                c2 = c1
         # Converts to chunk names
         # Appends the predicted chunks as a last column and saves the rows
 
         rows = test_sentence.splitlines()
         rows = [rows[i] + ' ' + y_test_predicted_symbols[i+predictedWords] for i in range(len(rows))]
+        predictedWords+=len(rows)
         for row in rows:
             f_out.write(row + '\n')
         f_out.write('\n')
-        predictedWords+=len(rows)
     f_out.close()
+
+"""def predict(test_sentences, feature_names, f_out):
+    for test_sentence in test_sentences:
+        X_test_dict, y_test_symbols = extract_features_sent(test_sentence, w_size, feature_names)
+        # Vectorize the test sentence and one hot encoding
+        X_test = vec.transform(X_test_dict)
+        # Predicts the chunks and returns numbers
+        y_test_predicted = classifier.predict(X_test)
+        # Converts to chunk names
+        y_test_predicted_symbols = list(dict_classes[i] for i in y_test_predicted)
+        # Appends the predicted chunks as a last column and saves the rows
+        rows = test_sentence.splitlines()
+        rows = [rows[i] + ' ' + y_test_predicted_symbols[i] for i in range(len(rows))]
+        for row in rows:
+            f_out.write(row + '\n')
+        f_out.write('\n')
+    f_out.close()"""
 
 def eval(predicted):
     """
@@ -196,8 +211,8 @@ if __name__ == '__main__':
 
     training_start_time = time.clock()
     print("Training the model...")
-    #classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear')
-    classifier = linear_model.Perceptron()
+    classifier = linear_model.LogisticRegression(penalty='l2', dual=True, solver='liblinear')
+    #classifier = linear_model.Perceptron()
     #classifier = svm.SVC()
     model = classifier.fit(X, y)
     #model = classifier.fit(X, y)
